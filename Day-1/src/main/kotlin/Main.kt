@@ -15,23 +15,22 @@ val numbers = arrayOf(
 fun main() {
     val file = File("res/data.txt").readLines()
 
-    var calibrationValueSum = 0
-
-    for (line in file) {
+    val calibrationValueSum = file.fold(0) { calibrationValue, line ->
         // Allows pattern matching of overlapping numbers
         val digits = numbers.fold(Regex("\\d").findAll(line)) { s, value ->
             (s + Regex(value.first).findAll(line))
         }.sortedBy { it.range.first }.map { map ->
             numbers.find { it.first == map.value }?.second ?:map.value
         }
-        if (digits.count() != 0) {
-            calibrationValueSum += (digits.first() + digits.last()).toInt()
-            println("$line: ${digits.toList().fold("") { s, match -> 
+
+        calibrationValue + if (digits.count() != 0) {
+            println("$line: ${digits.toList().fold("") { s, match ->
                 s + if (s.isNotEmpty()) {", "} else {""} + match
             }}")
-        }
-        else {
+            (digits.first() + digits.last()).toInt() // Accumulated to calibrationValue
+        } else {
             println("$line: does not contain number")
+            0
         }
     }
 
