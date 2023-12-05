@@ -2,8 +2,34 @@ import java.io.File
 import kotlin.math.*
 
 var partNumberSum = 0
+var gearRatioSum: Long = 0
 
-fun printPartNumbers(prevLine: String?, line: String, nextLine: String?) {
+fun accumulateGearRatios(prevLine: String, line: String, nextLine: String) {
+    val symbolsList = Regex("\\*").findAll(line)
+    val numberInPrev = Regex("\\b\\d+\\b").findAll(prevLine)
+    val numberInLine = Regex("\\b\\d+\\b").findAll(line)
+    val numberInNext = Regex("\\b\\d+\\b").findAll(nextLine)
+
+    symbolsList.forEach { symbol ->
+        val gearPartNumbers = numberInPrev.filter { number ->
+            number.range.first - 1 <= symbol.range.first && symbol.range.last <= number.range.last + 1
+        } + numberInNext.filter { number ->
+            number.range.first - 1 <= symbol.range.first && symbol.range.last <= number.range.last + 1
+        } + numberInLine.filter { number ->
+            number.range.first == symbol.range.last + 1 || number.range.last == symbol.range.first - 1
+        }
+
+        gearPartNumbers.forEach { println("val: ${it.value}") }
+
+        if (gearPartNumbers.count() == 2) {
+            val num1 = gearPartNumbers.first().value.toLong()
+            val num2 = gearPartNumbers.last().value.toLong()
+            gearRatioSum += num1 * num2
+        }
+    }
+}
+
+fun accumulatePartNumbers(prevLine: String?, line: String, nextLine: String?) {
     val numbersList = Regex("\\b\\d+\\b").findAll(line)
 
     numbersList.forEach { number ->
@@ -41,15 +67,17 @@ fun main() {
         |--------------------""".trimMargin())
 
     // Edge case: no previous line
-    printPartNumbers(null, file[0], file[1])
+    accumulatePartNumbers(null, file[0], file[1])
 
     for ((prevLine, line, nextLine) in file.windowed(3)) {
-        printPartNumbers(prevLine, line, nextLine)
+        accumulatePartNumbers(prevLine, line, nextLine)
+        accumulateGearRatios(prevLine, line, nextLine)
     }
 
     // Edge case: no next line
-    printPartNumbers(file[file.size - 2], file[file.size - 1], null)
+    accumulatePartNumbers(file[file.size - 2], file[file.size - 1], null)
 
     println("""--------------------
         |Sum of part numbers: $partNumberSum""".trimMargin())
+    println("Sum of gear ratios: $gearRatioSum")
 }
