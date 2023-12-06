@@ -1,4 +1,5 @@
 import java.io.File
+import kotlin.math.pow
 
 fun main() {
     val file = File("res/data.txt").readLines()
@@ -14,6 +15,8 @@ fun main() {
 
         numbers.filter { it in winning }.count()
     }
+    
+    val totalPoints = cardScores.fold(0) { x, y -> x + 2.0.pow(y - 1).toInt() }
 
     val cardsSeen = cardScores.foldIndexed(List(cardScores.size) { 1 }) { i, tot, it ->
         tot.zip(List(cardScores.size) { index ->
@@ -25,8 +28,10 @@ fun main() {
 
     // Print data for each scratch card
     cardScores.zip(cardsSeen).forEachIndexed { index, pair ->
-        println("Card ${index + 1}: number of winning numbers: ${pair.first}; number of cards seen: ${pair.second}")
+        println("Card ${index + 1}: winning numbers: ${pair.first}; card points: ${2.0.pow(pair.first - 1).toInt()}; cards seen: ${pair.second}")
     }
 
+    print('\n')
+    println("Total number of points: $totalPoints")
     println("Number of cards seen: ${cardsSeen.fold(0) { x, y -> x + y }}")
 }
