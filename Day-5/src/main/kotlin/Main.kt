@@ -19,6 +19,11 @@ fun mapValue(value: Long, map: List<List<Long>>) : Long {
     return value + mapValues[0] - mapValues[1]
 }
 
+// Inputs seed and the set of maps and returns the location
+fun getLocation(seed: Long, maps: List<List<List<Long>>>) : Long {
+    return maps.fold(seed) { result, map -> mapValue(result, map) }
+}
+
 fun main() {
     val file = File("res/data.txt").readText()
 
@@ -28,22 +33,43 @@ fun main() {
     val seeds = parseNumbers(getMapData("seeds", filedata).first().drop("seeds: ".length))
 
     // Maps
-    val seedToSoil = getMap("seed-to-soil", filedata)
-    val soilToFertilizer = getMap("soil-to-fertilizer", filedata)
-    val fertilizerToWater = getMap("fertilizer-to-water", filedata)
-    val waterToLight = getMap("water-to-light", filedata)
-    val lightToTemperature = getMap("light-to-temperature", filedata)
-    val temperatureToHumidity = getMap("temperature-to-humidity", filedata)
-    val humidityToLocation = getMap("humidity-to-location", filedata)
-
-    val soil = seeds.map { mapValue(it, seedToSoil) }
-    val fertilizer = soil.map { mapValue(it, soilToFertilizer) }
-    val water = fertilizer.map { mapValue(it, fertilizerToWater) }
-    val light = water.map { mapValue(it, waterToLight) }
-    val temperature = light.map { mapValue(it, lightToTemperature) }
-    val humidity = temperature.map { mapValue(it, temperatureToHumidity) }
-    val location = humidity.map { mapValue(it, humidityToLocation) }
+    val mapNames = listOf(
+        "seed-to-soil",
+        "soil-to-fertilizer",
+        "fertilizer-to-water",
+        "water-to-light",
+        "light-to-temperature",
+        "temperature-to-humidity",
+        "humidity-to-location"
+    )
+    val maps = mapNames.map { getMap(it, filedata) }
+    val location = seeds.map { getLocation(it, maps) }
 
     println("Part 1:")
     println("Min location value: ${location.min()}")
+
+    val seedPairs = List(seeds.size / 2) {
+        val start = seeds[2 * it]
+        val length = seeds[2 * it + 1]
+        mutableListOf(start, length)
+    }.sortedBy { it[0] }
+
+    // Cannot reduce ranges by removing repeated calculations because no overlap
+
+    println("Part 2:")
+
+    // Iterative algorithm: need different algorithm
+    val minLocationSeed = seedPairs.map {
+        var min: Long = getLocation(it[0], maps)
+        for (i in it[0].. (it[0] + it[1])) {
+            val loc = getLocation(i, maps)
+            if (loc < min) {
+                min = loc
+            }
+        }
+        println("range: ${it}, min: $min")
+        min
+    }
+
+    println("Min location for seed ranges: ${minLocationSeed.min()}")
 }
